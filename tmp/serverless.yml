@@ -1,0 +1,7 @@
+org: dankim0124
+app: express-api
+component: express
+name: express-starter
+
+inputs:
+  src: ./

@@ -1,0 +1,80 @@
+service: express-api
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  tableName: custom-serverless-express-${self:custom.stage}
+  myEnvironment:
+    MESSAGE:
+      prod: 'This is production environment'
+      dev: 'This is development environment'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:custom.tableName}
+  region: ap-northeast-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource:
+        - arn:aws:dynamodb:ap-northeast-2:*:table/${self:provider.environment.DYNAMODB_TABLE}
+
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource: 'arn:aws:dynamodb:ap-northeast-2:619242276371:table/funeral-table'
+
+    - Effect: Allow
+      Action:
+        - cognito-idp:*
+      Resource: arn:aws:cognito-idp:*:*:*
+
+#resources:
+#  Resources:
+#    myTable:
+#      Type: AWS::DynamoDB::Table
+#      Properties:
+#        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+#        AttributeDefinitions:
+#          - AttributeName: PK
+#            AttributeType: S
+#          - AttributeName: SK
+#            AttributeType: S
+#        KeySchema:
+#          - AttributeName: PK
+#            KeyType: HASH
+#          - AttributeName: SK
+#            KeyType: RANGE
+#        ProvisionedThroughput:
+#          ReadCapacityUnits: 20
+#          WriteCapacityUnits: 20
+
+plugins:
+  - serverless-bundle
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+functions:
+  app:
+    handler: index.handler
+    events:
+      - http: 'ANY /'
+      - http: 'ANY {proxy+}'
+
+resources:
+  - ${file(resources/api-gateway-errors.yml)}
